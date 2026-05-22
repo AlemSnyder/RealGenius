@@ -406,7 +406,7 @@ class PreListScreen(Window):
         return out
 
 
-location_of_change = 2
+location_of_change = 18
 
 class ListSceneTop(Window):
 
@@ -657,6 +657,55 @@ class ListScene(Scene):
         for window in self.windows:
             del window
 
+class PreYNScreen(Window):
+
+    def __init__(self, parent_window, **kwargs):
+        super().__init__(parent_window, **kwargs)
+        curses.curs_set(0)
+        self._window.bkgd(' ', curses.color_pair(1))
+        self.redraw()
+
+    def get_positions(self):
+
+        height, width = self._window.getmaxyx()
+        start_y = height // 2
+        start_x = width // 2
+        text_start_x = start_x + 12
+
+        return height, width, start_y, start_x
+
+    def get_dots_string(self):
+        return "..."
+
+    def redraw(self):
+        self._window.clear()
+
+        height, width, start_y, start_x = self.get_positions()
+
+
+        self.write(3, 3, " +                      + ", curses.color_pair(0) | curses.A_BOLD)
+        self.write(4, 3, "*##                    ##*", curses.color_pair(0) | curses.A_BOLD)
+        self.write(5, 3, " *#.                  .#* ", curses.color_pair(0) | curses.A_BOLD)
+        self.write(6, 3, "  *###.            .###*  ", curses.color_pair(0) | curses.A_BOLD)
+        self.write(7, 3, "  .  *##+        +##*  .  ", curses.color_pair(0) | curses.A_BOLD)
+        self.write(8, 3, "   ###.            .###   ", curses.color_pair(0) | curses.A_BOLD)
+        self.write(9, 3, "    *####::*  *::####*    ", curses.color_pair(0) | curses.A_BOLD)
+        self.write(10, 3, "         .  @@  .         ", curses.color_pair(0) | curses.A_BOLD)
+        self.write(11, 3, "        ##: @@ :##        ", curses.color_pair(0) | curses.A_BOLD)
+        self.write(12, 3, "       *##  ..  ##*       ", curses.color_pair(0) | curses.A_BOLD)
+        self.write(13, 3, "           *##*           ", curses.color_pair(0) | curses.A_BOLD)
+        self.write(14, 3, "            **            ", curses.color_pair(0) | curses.A_BOLD)
+
+        self.write(start_y - 1, start_x - 23, "Waiting for remote file 5.", curses.color_pair(0) | curses.A_BOLD)
+        self.write(start_y + 1, start_x - 23, self.get_dots_string(), curses.color_pair(0) | curses.A_BOLD)
+
+        self._window.refresh()
+
+    
+    def handle_keyinput(self, ch: int) -> WindowNavigation:
+        out: WindowNavigation = WindowNavigation.NOMOVE
+        return out
+
 
 class YNSceneTop(Window):
 
@@ -727,6 +776,8 @@ class YNSceneBody(Window):
         elif ch == curses.KEY_LEFT or ch == curses.KEY_RIGHT:
             self.selected_button = not self.selected_button
 
+        self.redraw()
+        self._window.refresh()
         return out
 
 
@@ -757,7 +808,7 @@ class YNScene(Scene):
         
         # Create windows for layout
         self.window_header.place(0, 0, width, header_height)
-        self.window_body.place(0, header_height, 0, body_height)
+        self.window_body.place(0, header_height, width, body_height)
 
         self.draw_layout()
 
@@ -1083,6 +1134,11 @@ class Manager:
             self.wait_for_local_3()
             self.init_location_search()
             return True
+#        elif self.current_scene == CurrentScene.LOCATIONSEARCH:
+##            self.wait_for_local_3()
+#            self.init_location_search()
+#            return True
+
         else:
             self.wait_for_local_4()
             return False
@@ -1090,13 +1146,12 @@ class Manager:
     def init_list_search(self):
             self.current_scene = CurrentScene.LISTSEARCH
             self.scene.close()
-            #self.scene = ListScene(self)
+            self.scene = YNScene(self)
 
     def init_location_search(self):
             self.current_scene = CurrentScene.LOCATIONSEARCH
             self.scene.close()
-            
-            self.scene = MapScene(self)
+            self.scene = YNScene(self)
 
     def wait_for_local_1(self):
         wait_screen = PreLoginScreen(self.top_level_window)
@@ -1119,8 +1174,8 @@ class Manager:
 
             time.sleep(1)
 
-    def wait_for_local_2(self):
-        wait_screen = PreListScreen(self.top_level_window)
+    def wait_for_local_3(self):
+        wait_screen = PreYNScreen(self.top_level_window)
         while not has_file("./runtime_data/file_l_3"):
 
             height, width = self.top_level_window.getmaxyx()

@@ -1170,7 +1170,7 @@ class Manager:
 
             time.sleep(1)
 
-    def wait_for_local_2(self):
+    def wait_for_local_3(self):
         wait_screen = PreMapScreen(self.top_level_window)
         while not has_file("./runtime_data/file_r_3"):
 
