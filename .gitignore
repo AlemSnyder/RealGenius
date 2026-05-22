@@ -1,0 +1,7 @@
+__pycache__*
+.vscode*
+Data*
+!Data/map_data.png
+old
+todo.md
+image_import_test.ipynb
