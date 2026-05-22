@@ -298,7 +298,7 @@ class LogInScene(Scene):
         self.loginwindow.redraw()
 
 
-location_of_change = 2
+location_of_change = 440
 
 class ListSceneTop(Window):
 
@@ -440,7 +440,7 @@ class ListSceneRight(Window):
             width_2 = width // 3 - 3
             width_3 = width - width_1 - width_2 - 9
 
-            formatted_string = f" {lpadalign(str(data_row[0]), width_1)} {self.spacing_char} {lpadalign(str(data_row[1]), width_2)} {self.spacing_char} {lpadalign(str(data_row[2]), width_3)}"
+            formatted_string = f" {lpadalign(str(data_row[1]), width_1)} {self.spacing_char} {lpadalign(str(data_row[2]), width_2)} {self.spacing_char} {lpadalign(str(data_row[0]), width_3)}"
 
             if data_line == self.current_selected:
                 self.write(window_line, 1, formatted_string, curses.A_BOLD | curses.color_pair(2))
