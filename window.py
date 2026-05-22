@@ -268,7 +268,7 @@ class LoginScreen(Window):
             else:
                 self.display_results = True
                 # test input
-                if self.username == "user" and self.password == "password":
+                if self.username == "hathaway" and self.password == "fcknixon":
                     out = WindowNavigation.RETURN
                 else:
                     self.redraw()
