@@ -145,7 +145,7 @@ class PreLoginScreen(Window):
         self.write(13, 3, "           *##*           ", curses.color_pair(0) | curses.A_BOLD)
         self.write(14, 3, "            **            ", curses.color_pair(0) | curses.A_BOLD)
 
-        self.write(start_y - 1, start_x - 23, "Waiting for Mainframe to start remote accesses.", curses.color_pair(0) | curses.A_BOLD)
+        self.write(start_y - 1, start_x - 23, "Waiting for remote accesses.", curses.color_pair(0) | curses.A_BOLD)
         self.write(start_y + 1, start_x - 23, self.get_dots_string(), curses.color_pair(0) | curses.A_BOLD)
 
 
@@ -356,7 +356,6 @@ class LogInScene(Scene):
 
         self.loginwindow.redraw()
 
-
 class PreListScreen(Window):
 
     def __init__(self, parent_window, **kwargs):
@@ -396,7 +395,7 @@ class PreListScreen(Window):
         self.write(13, 3, "           *##*           ", curses.color_pair(0) | curses.A_BOLD)
         self.write(14, 3, "            **            ", curses.color_pair(0) | curses.A_BOLD)
 
-        self.write(start_y - 1, start_x - 24, "Waiting for Mainframe to start 'File Transfer'.", curses.color_pair(0) | curses.A_BOLD)
+        self.write(start_y - 1, start_x - 23, "Waiting for remote file.", curses.color_pair(0) | curses.A_BOLD)
         self.write(start_y + 1, start_x - 23, self.get_dots_string(), curses.color_pair(0) | curses.A_BOLD)
 
         self._window.refresh()
@@ -407,7 +406,7 @@ class PreListScreen(Window):
         return out
 
 
-location_of_change = 440
+location_of_change = 2
 
 class ListSceneTop(Window):
 
@@ -522,8 +521,7 @@ class ListSceneRight(Window):
         super().__init__(parent_window, **kwargs)
         self._window.bkgd(' ', curses.color_pair(0))
 
-        self.data = read_csv("./location_flavortext.csv")
-
+        self.data = read_csv("./program_flavortext.csv")
 
     def redraw(self):
         self._window.clear()
@@ -557,7 +555,7 @@ class ListSceneRight(Window):
                 self.write(window_line, 1, formatted_string, curses.A_BOLD | curses.color_pair(1))
             data_line += 1
 
-        formatted_label = f" {lpadalign("Date", width_1)} {self.spacing_char} {lpadalign("Time", width_2)} {self.spacing_char} {lpadalign("Location", width_3)}"
+        formatted_label = f" {lpadalign("Program", width_1)} {self.spacing_char} {lpadalign("Description", width_2)} {self.spacing_char} {lpadalign("Permissions", width_3)}"
         formatted_spacer = self.vertical_space_char * (width_1 + 2) +self.corner_space_char +self.vertical_space_char * (width_2 + 2) +self.corner_space_char +self.vertical_space_char * (width_3) + " "
         self.write(0, 1, formatted_label, curses.A_BOLD | curses.color_pair(0))
         self.write(1, 1, formatted_spacer, curses.A_BOLD | curses.color_pair(1))
@@ -584,100 +582,6 @@ class ListSceneRight(Window):
         self.draw()
         self._window.refresh()
 
-class ListSceneBottom(Window):
-
-    entries: int = None
-    current_entre: int = 0 # point to something
-    search_location: int = None
-    search_bar_length: int = 0
-    search_text: str = ""
-
-    _display_width:int = 7
-
-
-    def __init__(self, parent_scene, parent_window, **kwargs):
-        self.parent_scene = parent_scene
-        super().__init__(parent_window, **kwargs)
-        self._window.bkgd(' ', curses.color_pair(1))
-
-    def redraw(self):
-        super().redraw()
-        self.draw()
-
-    def get_display_text(self):
-        self.current_entre = self.parent_scene.window_body.current_selected
-        self.entries = len(self.parent_scene.window_body.data)
-        current_location = f" {self.current_entre:5} " if self.current_entre is not None else " XXXXX "
-        search_location = f" {self.search_location:5} " if self.search_location is not None else " XXXXX "
-        total_entries = f" {self.entries:5} " if self.entries is not None else " XXXXX "
-
-        return current_location, search_location, total_entries
-
-    def draw(self):
-        heigh, width = self._window.getmaxyx()
-        location_1 = 10
-        location_2 = location_1 + self._display_width * 2
-        location_3 = max(location_2 + self._display_width * 2, int(width * .4))
-        location_4 = width - 10 - self._display_width 
-
-        self.search_bar_length = location_4 - self._display_width - location_3
-
-        display_text = self.get_display_text()
-
-        self.write(1, location_1, display_text[0], curses.color_pair(3))
-        self.write(1, location_2, display_text[1], curses.color_pair(3))
-        self.write(1, location_4, display_text[2], curses.color_pair(3))
-        self.draw_search_text()
-
-    def update_search(self, data):
-        if self.search_text.upper == "TOMORROW" or self.search_text.upper() == "CALTECH":
-#            self.entries = len(data)
-            self.search_location = location_of_change
-        else:
-            self.search_location = None
-    
-    def draw_search_text(self):
-        heigh, width = self._window.getmaxyx()
-        location_1 = 10
-        location_2 = location_1 + self._display_width * 2
-        location_3 = max(location_2 + self._display_width * 2, int(width * .4))
-
-        print_text = f" {self.search_text.ljust(self.search_bar_length - 2)} "
-
-        self.write(1, location_3, print_text, curses.color_pair(3))
-        
-        self._window.move(1, location_3 + min(len(self.search_text), self.search_bar_length - 2) + 1)
-
-
-
-    def handle_keyinput(self, ch):
-        out = WindowNavigation.NOMOVE
-        
-        if ch == curses.KEY_UP:
-            out = WindowNavigation.UP
-        elif ch == curses.KEY_DOWN:
-            out = WindowNavigation.DOWN
-
-        
-        elif ch == ord('\n'):
-            # redraw window with new status
-            out = WindowNavigation.RETURN
-            self.draw()
-            self._window.refresh()
-
-        elif ch == curses.KEY_BACKSPACE or ch == 127:
-            self.search_text = self.search_text[:-1]
-            self.draw_search_text()
-            self._window.refresh()
-            
-        elif ch >= 32 and ch <= 126:  # printable ASCII only
-            if len(self.search_text) < self.search_bar_length:
-                self.search_text += chr(ch)
-                self.draw_search_text()
-                self._window.refresh()
-
-        return out
-
 class ListScene(Scene):
     """Displays date time location entries and has an interface to search those entries"""
 
@@ -693,9 +597,8 @@ class ListScene(Scene):
         self.window_header : ListSceneTop = ListSceneTop(self, self.manager.top_level_window)
         self.window_body_left: ListSceneLeft = ListSceneLeft(self, self.manager.top_level_window)
         self.window_body: ListSceneRight = ListSceneRight(self, self.manager.top_level_window)
-        self.window_footer: ListSceneBottom = ListSceneBottom(self, self.manager.top_level_window)
 
-        self.windows = [self.window_header, self.window_body_left, self.window_body, self.window_footer]
+        self.windows = [self.window_header, self.window_body_left, self.window_body]
         self.manager.top_level_window.refresh()
 
         self.selected_window = self.window_body_left
@@ -707,8 +610,7 @@ class ListScene(Scene):
         
         # Calculate dimensions for layout
         header_height = 5
-        footer_height = 3
-        body_height = height - header_height - footer_height
+        body_height = height - header_height
         
         body_left_width = int(width * 0.2)
         body_right_width = width - body_left_width
@@ -717,11 +619,6 @@ class ListScene(Scene):
         self.window_header.place(0, 0, width, header_height)
         self.window_body_left.place(0, header_height, body_left_width, body_height)
         self.window_body.place(body_left_width, header_height, body_right_width, body_height)
-        self.window_footer.place(0, height - footer_height, width, footer_height)
-
-#        self.manager.top_level_window.redrawwin()
-#        self.manager.top_level_window.refresh()
-
 
         self.draw_layout()
 
@@ -747,92 +644,145 @@ class ListScene(Scene):
             return WindowNavigation.NOMOVE
         
 
-        if navigation == WindowNavigation.UP or navigation == WindowNavigation.DOWN:
-            if self.selected_window == self.window_body_left:
-                self.selected_window = self.window_footer
-                self.window_body.redraw()
-                curses.curs_set(1)
-                self.window_footer.redraw()
-                self.window_footer._window.refresh()
-                return WindowNavigation.NOMOVE
-            if self.selected_window == self.window_footer:
-                self.selected_window = self.window_body_left
-                curses.curs_set(0)
-                if navigation == WindowNavigation.UP:
-                    self.window_body_left.selected_button = 2
-                else:
-                    self.window_body_left.selected_button = 0
-                self.window_body_left.draw()
-                self.window_body_left._window.refresh()
-                self.window_footer.redraw()
-                self.window_footer._window.refresh()
-
-        elif navigation == WindowNavigation.RETURN:
+        if navigation == WindowNavigation.RETURN:
             if self.selected_window == self.window_body_left:
                 return WindowNavigation.RETURN
-            elif self.selected_window == self.window_footer:
-                self.window_footer.update_search(self.window_body.data)
 
         return WindowNavigation.NOMOVE
     
     def move(self, movement: int):
         self.window_body.move(movement)
-        self.window_footer.redraw()
-        self.window_footer._window.refresh()
 
     def close(self):
         for window in self.windows:
             del window
 
 
-class PreMapScreen(Window):
+class YNSceneTop(Window):
 
-    def __init__(self, parent_window, **kwargs):
+    def __init__(self, parent_scene, parent_window, **kwargs):
+        self.parent_scene = parent_scene
         super().__init__(parent_window, **kwargs)
-        curses.curs_set(0)
+        self._window.bkgd(' ', curses.color_pair(1))
+        super().redraw()
+
+    def redraw(self):
+        super().redraw()
+        self.draw()
+
+    def draw(self):
+#        self.write(1, 1, "Flavor Text", curses.A_BOLD)
+        self._window.clear()
+
+        heigh, width = self._window.getmaxyx()
+        display_width = width // 3 - 14
+
+        location_1 = 6
+        location_2 = location_1 + display_width + 7
+        display_width_2 = width - location_2 - 6
+
+        self.write(1, location_1, " TOP SECRET           ", curses.color_pair(3))
+        self.write(1, location_2, f" {"Miramar Air Base Interface".ljust(display_width_2-2)} ", curses.color_pair(3))
+        self.write(3, location_1, " ACCESS: RESTRICTED   ", curses.color_pair(3))
+        self.write(3, location_2, f" {"Project Crossbow Manual Control".ljust(display_width_2-2)} ", curses.color_pair(3))
+
+class YNSceneBody(Window):
+
+    selected_button:bool = False
+
+    def __init__(self, parent_scene, parent_window, **kwargs):
+        self.parent_scene = parent_scene
+        super().__init__(parent_window, **kwargs)
         self._window.bkgd(' ', curses.color_pair(1))
         self.redraw()
 
-    def get_positions(self):
-
-        height, width = self._window.getmaxyx()
-        start_y = height // 2
-        start_x = width // 2
-        text_start_x = start_x + 12
-
-        return height, width, start_y, start_x
-
-    def get_dots_string(self):
-        return "..."
-
     def redraw(self):
         self._window.clear()
+        self._window.redrawwin()
+        self.draw()
 
-        height, width, start_y, start_x = self.get_positions()
+    def draw(self):
+        height, width = self._window.getmaxyx()
 
+        if self.selected_button:
+            self.write(width // 2, height // 3 - 2, " YES ", curses.A_BOLD | curses.color_pair(2))
+        else:
+            self.write(width // 2, height // 3 - 2, " YES ", curses.A_BOLD | curses.color_pair(4))
 
-        self.write(3, 3, " +                      + ", curses.color_pair(0) | curses.A_BOLD)
-        self.write(4, 3, "*##                    ##*", curses.color_pair(0) | curses.A_BOLD)
-        self.write(5, 3, " *#.                  .#* ", curses.color_pair(0) | curses.A_BOLD)
-        self.write(6, 3, "  *###.            .###*  ", curses.color_pair(0) | curses.A_BOLD)
-        self.write(7, 3, "  .  *##+        +##*  .  ", curses.color_pair(0) | curses.A_BOLD)
-        self.write(8, 3, "   ###.            .###   ", curses.color_pair(0) | curses.A_BOLD)
-        self.write(9, 3, "    *####::*  *::####*    ", curses.color_pair(0) | curses.A_BOLD)
-        self.write(10, 3, "         .  @@  .         ", curses.color_pair(0) | curses.A_BOLD)
-        self.write(11, 3, "        ##: @@ :##        ", curses.color_pair(0) | curses.A_BOLD)
-        self.write(12, 3, "       *##  ..  ##*       ", curses.color_pair(0) | curses.A_BOLD)
-        self.write(13, 3, "           *##*           ", curses.color_pair(0) | curses.A_BOLD)
-        self.write(14, 3, "            **            ", curses.color_pair(0) | curses.A_BOLD)
+        if not self.selected_button:
+            self.write(width // 2, (height * 2) // 3 - 2, " NO ", curses.A_BOLD | curses.color_pair(2))
+        else:
+            self.write(width // 2, (height * 2) // 3 - 2, " NO ", curses.A_BOLD | curses.color_pair(4))
 
-        self.write(start_y - 1, start_x - 24, "Waiting for Mainframe to start Something else.", curses.color_pair(0) | curses.A_BOLD)
-        self.write(start_y + 1, start_x - 23, self.get_dots_string(), curses.color_pair(0) | curses.A_BOLD)
-
-        self._window.refresh()
-
-    
     def handle_keyinput(self, ch: int) -> WindowNavigation:
         out: WindowNavigation = WindowNavigation.NOMOVE
+        if ch == ord('\n'):
+            # run current button
+            if self.selected_button:
+                # up button
+                return WindowNavigation.RETURN
+            elif not self.selected_button:
+                return WindowNavigation.NOMOVE
+
+        elif ch == curses.KEY_LEFT or ch == curses.KEY_RIGHT:
+            self.selected_button = not self.selected_button
+
         return out
+
+
+class YNScene(Scene):
+    """Displays date time location entries and has an interface to search those entries"""
+
+    def __init__(self, manager):
+        self.manager = manager
+
+        # hide curser
+        curses.curs_set(0)
+
+        # Create windows for layout
+        self.window_header : YNSceneTop = YNSceneTop(self, self.manager.top_level_window)
+        self.window_body: YNSceneBody = YNSceneBody(self, self.manager.top_level_window)
+
+        self.windows = [self.window_header, self.window_body]
+        self.manager.top_level_window.refresh()
+
+        self.redraw()
+
+    def redraw(self):
+        height, width = self.manager.top_level_window.getmaxyx()
+        
+        # Calculate dimensions for layout
+        header_height = 5
+        body_height = height - header_height
+        
+        # Create windows for layout
+        self.window_header.place(0, 0, width, header_height)
+        self.window_body.place(0, header_height, 0, body_height)
+
+        self.draw_layout()
+
+    def correct_selected(self):
+        return self.window_body.correct_selected()
+
+    def draw_layout(self):
+        """Draw the main layout structure"""
+
+        for window in self.windows:
+#            window._window.clear()
+            window.redraw()
+            window._window.refresh()
+
+    def handle_keyinput(self, ch):
+        navigation = self.window_body.handle_keyinput(ch)
+
+        return navigation
+    
+    def move(self, movement: int):
+        self.window_body.move(movement)
+
+    def close(self):
+        for window in self.windows:
+            del window
 
 
 class MapSceneTop(Window):
@@ -1118,30 +1068,29 @@ class Manager:
 
     def __init__(self, window : curses.window):
         self.top_level_window = window
-        # here we wait for local
+        make_file("./runtime_data/file_r_1")
         self.wait_for_local_1()
-        self.scene = LogInScene(self)
+        self.scene = ListScene(self)
 
     def next_scene(self) -> bool:
         if self.current_scene == CurrentScene.LOGIN:
-            make_file("./runtime_data/file_l_1")
+            make_file("./runtime_data/file_r_2")
             self.wait_for_local_2()
             self.init_list_search()
             return True
         elif self.current_scene == CurrentScene.LISTSEARCH:
-            make_file("./runtime_data/file_l_2")
+            make_file("./runtime_data/file_r_3")
             self.wait_for_local_3()
             self.init_location_search()
             return True
         else:
-            make_file("./runtime_data/file_l_3")
             self.wait_for_local_4()
             return False
 
     def init_list_search(self):
             self.current_scene = CurrentScene.LISTSEARCH
             self.scene.close()
-            self.scene = ListScene(self)
+            #self.scene = ListScene(self)
 
     def init_location_search(self):
             self.current_scene = CurrentScene.LOCATIONSEARCH
@@ -1151,7 +1100,7 @@ class Manager:
 
     def wait_for_local_1(self):
         wait_screen = PreLoginScreen(self.top_level_window)
-        while not has_file("./runtime_data/file_r_1"):
+        while not has_file("./runtime_data/file_l_1"):
 
             height, width = self.top_level_window.getmaxyx()
             wait_screen.place(0,0, width, height)
@@ -1162,7 +1111,7 @@ class Manager:
 
     def wait_for_local_2(self):
         wait_screen = PreListScreen(self.top_level_window)
-        while not has_file("./runtime_data/file_r_2"):
+        while not has_file("./runtime_data/file_l_2"):
 
             height, width = self.top_level_window.getmaxyx()
             wait_screen.place(0,0, width, height)
@@ -1171,8 +1120,8 @@ class Manager:
             time.sleep(1)
 
     def wait_for_local_2(self):
-        wait_screen = PreMapScreen(self.top_level_window)
-        while not has_file("./runtime_data/file_r_3"):
+        wait_screen = PreListScreen(self.top_level_window)
+        while not has_file("./runtime_data/file_l_3"):
 
             height, width = self.top_level_window.getmaxyx()
             wait_screen.place(0,0, width, height)
