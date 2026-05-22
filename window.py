@@ -1,6 +1,8 @@
 import curses
 from enum import Enum
 import csv
+import time
+import os
 
 import terminal_map
 
@@ -24,6 +26,12 @@ def lerp(out_min: float, out_max: float, in_min: float, in_max: float, value: fl
         return out_min
     return out_min + (out_max - out_min) * ((value - in_min) / (in_max - in_min))
 
+def has_file(file_name) :
+    return os.path.isfile(file_name)
+
+def make_file(file_name):
+    file = open(file_name, "+a")
+    file.close()
 
 class WindowNavigation(Enum):
     UP = 0
@@ -98,6 +106,56 @@ class Window:
         else:
             self._window.addstr(y, x, text, attr)
 
+class PreLoginScreen(Window):
+
+    def __init__(self, parent_window, **kwargs):
+        super().__init__(parent_window, **kwargs)
+        curses.curs_set(0)
+        self._window.bkgd(' ', curses.color_pair(1))
+        self.redraw()
+
+    def get_positions(self):
+
+        height, width = self._window.getmaxyx()
+        start_y = height // 2
+        start_x = width // 2
+        text_start_x = start_x + 12
+
+        return height, width, start_y, start_x
+
+    def get_dots_string(self):
+        return "..."
+
+    def redraw(self):
+        self._window.clear()
+
+        height, width, start_y, start_x = self.get_positions()
+
+
+        self.write(3, 3, " +                      + ", curses.color_pair(0) | curses.A_BOLD)
+        self.write(4, 3, "*##                    ##*", curses.color_pair(0) | curses.A_BOLD)
+        self.write(5, 3, " *#.                  .#* ", curses.color_pair(0) | curses.A_BOLD)
+        self.write(6, 3, "  *###.            .###*  ", curses.color_pair(0) | curses.A_BOLD)
+        self.write(7, 3, "  .  *##+        +##*  .  ", curses.color_pair(0) | curses.A_BOLD)
+        self.write(8, 3, "   ###.            .###   ", curses.color_pair(0) | curses.A_BOLD)
+        self.write(9, 3, "    *####::*  *::####*    ", curses.color_pair(0) | curses.A_BOLD)
+        self.write(10, 3, "         .  @@  .         ", curses.color_pair(0) | curses.A_BOLD)
+        self.write(11, 3, "        ##: @@ :##        ", curses.color_pair(0) | curses.A_BOLD)
+        self.write(12, 3, "       *##  ..  ##*       ", curses.color_pair(0) | curses.A_BOLD)
+        self.write(13, 3, "           *##*           ", curses.color_pair(0) | curses.A_BOLD)
+        self.write(14, 3, "            **            ", curses.color_pair(0) | curses.A_BOLD)
+
+        self.write(start_y - 1, start_x - 23, "Waiting for Mainframe to start remote accesses.", curses.color_pair(0) | curses.A_BOLD)
+        self.write(start_y + 1, start_x - 23, self.get_dots_string(), curses.color_pair(0) | curses.A_BOLD)
+
+
+        self._window.refresh()
+
+    
+    def handle_keyinput(self, ch: int) -> WindowNavigation:
+        out: WindowNavigation = WindowNavigation.NOMOVE
+        return out
+
 class LoginScreen(Window):
     username : str = ""
     password: str = ""
@@ -106,6 +164,7 @@ class LoginScreen(Window):
     display_results = False
 
     def __init__(self, parent_window, **kwargs):
+        curses.curs_set(1)
         super().__init__(parent_window, **kwargs)
         self._window.bkgd(' ', curses.color_pair(1))
         self.redraw()
@@ -187,10 +246,10 @@ class LoginScreen(Window):
 
         # Display result
         if self.display_results:
-            self.write(start_y + 6, start_x, f"Username: {self.username}")
-            self.write(start_y + 7, start_x, f"Password: {self.password}")
+            self.write(start_y + 9, start_x, f"Username: {self.username}")
+            self.write(start_y + 10, start_x, f"Password: {self.password}")
 
-            self.write(start_y + 9, start_x, "Not correct try again")
+            self.write(start_y + 11, start_x, "Not correct try again")
 
         self.set_curser_location()
         # this will redraw the whole frame
@@ -296,6 +355,56 @@ class LogInScene(Scene):
         self.loginwindow.place(0, 0, width, height)
 
         self.loginwindow.redraw()
+
+
+class PreListScreen(Window):
+
+    def __init__(self, parent_window, **kwargs):
+        super().__init__(parent_window, **kwargs)
+        curses.curs_set(0)
+        self._window.bkgd(' ', curses.color_pair(1))
+        self.redraw()
+
+    def get_positions(self):
+
+        height, width = self._window.getmaxyx()
+        start_y = height // 2
+        start_x = width // 2
+        text_start_x = start_x + 12
+
+        return height, width, start_y, start_x
+
+    def get_dots_string(self):
+        return "..."
+
+    def redraw(self):
+        self._window.clear()
+
+        height, width, start_y, start_x = self.get_positions()
+
+
+        self.write(3, 3, " +                      + ", curses.color_pair(0) | curses.A_BOLD)
+        self.write(4, 3, "*##                    ##*", curses.color_pair(0) | curses.A_BOLD)
+        self.write(5, 3, " *#.                  .#* ", curses.color_pair(0) | curses.A_BOLD)
+        self.write(6, 3, "  *###.            .###*  ", curses.color_pair(0) | curses.A_BOLD)
+        self.write(7, 3, "  .  *##+        +##*  .  ", curses.color_pair(0) | curses.A_BOLD)
+        self.write(8, 3, "   ###.            .###   ", curses.color_pair(0) | curses.A_BOLD)
+        self.write(9, 3, "    *####::*  *::####*    ", curses.color_pair(0) | curses.A_BOLD)
+        self.write(10, 3, "         .  @@  .         ", curses.color_pair(0) | curses.A_BOLD)
+        self.write(11, 3, "        ##: @@ :##        ", curses.color_pair(0) | curses.A_BOLD)
+        self.write(12, 3, "       *##  ..  ##*       ", curses.color_pair(0) | curses.A_BOLD)
+        self.write(13, 3, "           *##*           ", curses.color_pair(0) | curses.A_BOLD)
+        self.write(14, 3, "            **            ", curses.color_pair(0) | curses.A_BOLD)
+
+        self.write(start_y - 1, start_x - 23, "Waiting for Mainframe to start file transfer.", curses.color_pair(0) | curses.A_BOLD)
+        self.write(start_y + 1, start_x - 23, self.get_dots_string(), curses.color_pair(0) | curses.A_BOLD)
+
+        self._window.refresh()
+
+    
+    def handle_keyinput(self, ch: int) -> WindowNavigation:
+        out: WindowNavigation = WindowNavigation.NOMOVE
+        return out
 
 
 location_of_change = 440
@@ -846,6 +955,11 @@ class MapSceneRight(Window):
             self.zoom_in()
         elif ch == ord('=') or ch == ord('+'):
             self.zoom_out()
+        elif ch == ord('\n'):
+            if ((self.location_x - 805)**2 + (self.location_y - 1032)**2)**.5 < 100:
+                return WindowNavigation.RETURN
+            else:
+                return out
         else:
             return out
 
@@ -913,6 +1027,39 @@ class MapScene(Scene):
         for window in self.windows:
             del window
     
+class PostScreen(Window):
+
+    def __init__(self, parent_window, **kwargs):
+        super().__init__(parent_window, **kwargs)
+        curses.curs_set(0)
+        self._window.bkgd(' ', curses.color_pair(1))
+        self.redraw()
+
+    def get_positions(self):
+
+        height, width = self._window.getmaxyx()
+        start_y = height // 2
+        start_x = width // 2
+        text_start_x = start_x + 12
+
+        return height, width, start_y, start_x
+
+    def get_dots_string(self):
+        return "..."
+
+    def redraw(self):
+        self._window.clear()
+
+        height, width, start_y, start_x = self.get_positions()
+
+        self.write(start_y - 1, start_x - 17, "Target reprogrammed. Data uploaded.", curses.color_pair(0) | curses.A_BOLD)
+
+        self._window.refresh()
+
+    
+    def handle_keyinput(self, ch: int) -> WindowNavigation:
+        out: WindowNavigation = WindowNavigation.NOMOVE
+        return out
 
 class Manager:
     # selected_scene : Scene = None
@@ -921,22 +1068,29 @@ class Manager:
 
     def __init__(self, window : curses.window):
         self.top_level_window = window
+        # here we wait for local
+        self.wait_for_local_1()
         self.scene = LogInScene(self)
 
     def next_scene(self) -> bool:
         if self.current_scene == CurrentScene.LOGIN:
+            make_file("./runtime_data/file_l_1")
+            self.wait_for_local_2()
             self.init_list_search()
             return True
         elif self.current_scene == CurrentScene.LISTSEARCH:
+            make_file("./runtime_data/file_l_2")
+            self.wait_for_local_3()
             self.init_location_search()
             return True
         else:
+            self.wait_for_local_3()
             return False
 
     def init_list_search(self):
             self.current_scene = CurrentScene.LISTSEARCH
             self.scene.close()
-            
+            # here we wait
             self.scene = ListScene(self)
 
     def init_location_search(self):
@@ -945,9 +1099,36 @@ class Manager:
             
             self.scene = MapScene(self)
 
+    def wait_for_local_1(self):
+        wait_screen = PreLoginScreen(self.top_level_window)
+        while not has_file("./runtime_data/file_r_1"):
 
-#    def set_curser(self):
+            height, width = self.top_level_window.getmaxyx()
+            wait_screen.place(0,0, width, height)
+            wait_screen.redraw()
 
+            time.sleep(1)
+
+
+    def wait_for_local_2(self):
+        wait_screen = PreListScreen(self.top_level_window)
+        while not has_file("./runtime_data/file_r_2"):
+
+            height, width = self.top_level_window.getmaxyx()
+            wait_screen.place(0,0, width, height)
+            wait_screen.redraw()
+
+            time.sleep(1)
+
+    def wait_for_local_3(self):
+        wait_screen = PostScreen(self.top_level_window)
+#        while not has_file("./runtime_data/file_r_3"):
+
+        height, width = self.top_level_window.getmaxyx()
+        wait_screen.place(0,0, width, height)
+        wait_screen.redraw()
+
+        time.sleep(20)
 
     def redraw(self):
         self.top_level_window.refresh()
