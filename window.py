@@ -714,6 +714,7 @@ class MapSceneLeft(Window):
         self.parent_scene = parent_scene
         super().__init__(parent_window, **kwargs)
         self._window.bkgd(' ', curses.color_pair(1))
+        self.map_of_campus.complete()
 
     def redraw(self):
         self._window.clear()

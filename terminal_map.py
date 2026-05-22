@@ -1,5 +1,7 @@
 from PIL import Image, ImageFile
 import numpy as np
+import threading
+import asyncio
 
 number_of_colors = 14
 
@@ -31,17 +33,23 @@ def load_image(image : ImageFile.ImageFile):
     
     return out_data
 
+
 # TODO see if this can be asynchronous
 class TerminalMap:
     def __init__(self, color_offset: int):
-        self.data = load_image(Image.open('./Data/map_data.png'))
-#        self.data, self.width, self.height = self.read_data(path)
-#        self.data = [[ int(((x-25)**2 + (y-25)**2)**.5) % 8 for x in range(50)] for y in range(50)]
+        self.load_data_task = threading.Thread(target=asyncio.run, args=(self.load_data(), ))
+        self.load_data_task.start()
         self.color_offset = color_offset
+
+    async def load_data(self):
+        self.data = load_image(Image.open('./Data/map_data.png'))
         self.width, self.height = self.data.shape[0:2]
 
         self.window_width = 1
         self.window_height = 1
+
+    def complete(self):
+        self.load_data_task.join()
 
     def _get(self, x: int, y: int):
         if x < 0 or x >= self.height or y < 0 or y >= self.width:
